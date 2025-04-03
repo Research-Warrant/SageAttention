@@ -80,8 +80,8 @@ nvcc_cuda_version = get_nvcc_cuda_version(CUDA_HOME)
 if not compute_capabilities:
     #raise RuntimeError("No GPUs found. Please specify the target GPU architectures or build on a machine with GPUs.")
     # compute_capabilities.add(f"{8}.{6}") # 40xx (Ada)
-    # compute_capabilities.add(f"{8}.{9}") # 40xx (Ada)
-    # compute_capabilities.add(f"{9}.{0}") # 50xx (Blackwell) - rumored official CC
+    compute_capabilities.add(f"{8}.{9}") # 40xx (Ada)
+    compute_capabilities.add(f"{9}.{0}") # 50xx (Blackwell) - rumored official CC
     compute_capabilities.add(f"{12}.{0}") # 50xx HPC variants, if needed
 else:
     print(f"Detect GPUs with compute capabilities: {compute_capabilities}")
