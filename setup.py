@@ -27,7 +27,7 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CUDA_HOME
 HAS_SM80 = False
 HAS_SM86 = False
 HAS_SM89 = False
-HAS_SM90 = False
+HAS_SM90 = True
 HAS_SM120 = False
 
 # Supported NVIDIA GPU architectures.
