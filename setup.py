@@ -114,7 +114,7 @@ for capability in compute_capabilities:
         num = "90a" # need to use sm90a instead of sm90 to use wgmma ptx instruction.
     elif capability.startswith("12.0"):
         HAS_SM120 = True
-        num = "120a" # need to use sm120a to use mxfp8/mxfp4/nvfp4 instructions.
+        num = "120" # need to use sm120a to use mxfp8/mxfp4/nvfp4 instructions.
     NVCC_FLAGS += ["-gencode", f"arch=compute_{num},code=sm_{num}"]
     if capability.endswith("+PTX"):
         NVCC_FLAGS += ["-gencode", f"arch=compute_{num},code=compute_{num}"]
