@@ -111,7 +111,7 @@ for capability in compute_capabilities:
         num = "89"
     elif capability.startswith("9.0"):
         HAS_SM90 = True
-        num = "90a" # need to use sm90a instead of sm90 to use wgmma ptx instruction.
+        num = "90" # need to use sm90a instead of sm90 to use wgmma ptx instruction.
     elif capability.startswith("12.0"):
         HAS_SM120 = True
         num = "120" # need to use sm120a to use mxfp8/mxfp4/nvfp4 instructions.
