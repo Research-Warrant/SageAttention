@@ -81,7 +81,7 @@ if not compute_capabilities:
     compute_capabilities.add(f"{8}.{6}") # 40xx (Ada)
     compute_capabilities.add(f"{8}.{9}") # 40xx (Ada)
     compute_capabilities.add(f"{9}.{0}") # 50xx (Blackwell) - rumored official CC
-    compute_capabilities.add(f"{12}.{0}") # 50xx HPC variants, if needed
+    # compute_capabilities.add(f"{12}.{0}") # 50xx HPC variants, if needed
 else:
     print(f"Detect GPUs with compute capabilities: {compute_capabilities}")
 
