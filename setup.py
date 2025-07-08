@@ -78,10 +78,10 @@ for i in range(device_count):
 
 nvcc_cuda_version = get_nvcc_cuda_version(CUDA_HOME)
 if not compute_capabilities:
-    # compute_capabilities.add(f"{8}.{6}") # 40xx (Ada)
-    # compute_capabilities.add(f"{8}.{9}") # 40xx (Ada)
-    compute_capabilities.add(f"{9}.{0}") # 50xx (Blackwell) - rumored official CC
-    # compute_capabilities.add(f"{12}.{0}") # 50xx HPC variants, if needed
+    compute_capabilities.add(f"{8}.{6}") # 40xx (Ada)
+    compute_capabilities.add(f"{8}.{9}") # 40xx (Ada)
+    # compute_capabilities.add(f"{9}.{0}") # 50xx (Blackwell) - rumored official CC
+    compute_capabilities.add(f"{12}.{0}") # 50xx HPC variants, if needed
 else:
     print(f"Detect GPUs with compute capabilities: {compute_capabilities}")
 
@@ -114,7 +114,7 @@ for capability in compute_capabilities:
         num = "90" # need to use sm90a instead of sm90 to use wgmma ptx instruction.
     elif capability.startswith("12.0"):
         HAS_SM120 = True
-        num = "120" # need to use sm120a to use mxfp8/mxfp4/nvfp4 instructions.
+        num = "120a" # need to use sm120a to use mxfp8/mxfp4/nvfp4 instructions.
     NVCC_FLAGS += ["-gencode", f"arch=compute_{num},code=sm_{num}"]
     if capability.endswith("+PTX"):
         NVCC_FLAGS += ["-gencode", f"arch=compute_{num},code=compute_{num}"]
