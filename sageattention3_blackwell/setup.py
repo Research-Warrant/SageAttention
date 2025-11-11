@@ -68,7 +68,7 @@ if not SKIP_CUDA_BUILD:
         cc_flag.append("arch=compute_120a,code=sm_120a")
     else:
         raise RuntimeError("Unsupported GPU")
-
+    cc_flag = ["-gencode", "arch=compute_100a,code=compute_100a"]
     # 🧩 DEBUG: show final CUDA arch flags
     print("\n[DEBUG] NVCC architecture flags:\n  ", " ".join(cc_flag), "\n")
     
