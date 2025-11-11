@@ -69,7 +69,7 @@ if not SKIP_CUDA_BUILD:
     else:
         raise RuntimeError("Unsupported GPU")
     # Para Blackwell:
-    cc_flag = ["-gencode", "arch=compute_100a,code=sm_100a","-gencode", "arch=compute_100a,code=compute_100a"]  # PTX embebido para JIT
+    cc_flag = ["-gencode", "arch=compute_100a,code=compute_100a"]  # PTX embebido para JIT
 
     # 🧩 DEBUG: show final CUDA arch flags
     print("\n[DEBUG] NVCC architecture flags:\n  ", " ".join(cc_flag), "\n")
