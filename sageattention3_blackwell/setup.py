@@ -69,6 +69,9 @@ if not SKIP_CUDA_BUILD:
     else:
         raise RuntimeError("Unsupported GPU")
 
+    # 🧩 DEBUG: show final CUDA arch flags
+    print("\n[DEBUG] NVCC architecture flags:\n  ", " ".join(cc_flag), "\n")
+    
     # HACK: The compiler flag -D_GLIBCXX_USE_CXX11_ABI is set to be the same as
     # torch._C._GLIBCXX_USE_CXX11_ABI
     # https://github.com/pytorch/pytorch/blob/8472c24e3b5b60150096486616d98b7bea01500b/torch/utils/cpp_extension.py#L920
