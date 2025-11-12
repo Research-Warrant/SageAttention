@@ -109,6 +109,8 @@ if not SKIP_CUDA_BUILD:
         "-DKBLKSIZE=128",
         "-DCTA256",
         "-DDQINRMEM",
+        # Enable NVFP4 block-scaled MMA path in CUTE for Blackwell
+        "-DCUTE_ARCH_MXF4NVF4_4X_UE4M3_MMA_ENABLED",
     ]
     include_dirs = [
         repo_dir / "sageattn3",
