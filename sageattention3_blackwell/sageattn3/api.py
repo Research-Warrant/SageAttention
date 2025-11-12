@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import os
 import torch
 import triton
 import triton.language as tl
@@ -129,6 +130,16 @@ def blockscaled_fp4_attn(qlist: Tuple,
 
 
 def sageattn3_blackwell(q, k, v, attn_mask = None, is_causal = False, per_block_mean = True, **kwargs):
+    # Fallbacks: allow disabling FP4 path via env or on unsupported CC
+    if os.getenv("SAGEATTN3_DISABLE_FP4") == "1" or os.getenv("SAGEATTN_DISABLE_FP4") == "1":
+        return sdpa(q, k, v, is_causal=is_causal)
+    try:
+        cc_major, cc_minor = torch.cuda.get_device_capability(q.device)
+    except Exception:
+        cc_major, cc_minor = (0, 0)
+    if cc_major < 12:
+        # SM_120+ required for NVFP4 block-scaled MMA in this build
+        return sdpa(q, k, v, is_causal=is_causal)
     if q.size(-1) >= 256:
         print(f"Unsupported Headdim {q.size(-1)}")
         return sdpa(q, k, v, is_causal = is_causal)
