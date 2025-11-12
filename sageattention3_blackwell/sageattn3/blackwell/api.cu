@@ -217,8 +217,8 @@ mha_fwd(at::Tensor &q,         // batch_size x seqlen_q x num_heads x (head_size
     ) {
 
     auto dprops = at::cuda::getCurrentDeviceProperties();
-    bool is_sm120 = dprops->major == 12 && dprops->minor == 0;
-    TORCH_CHECK(is_sm120, "only supports Blackwell GPUs or newer.");
+    bool is_sm100_or_newer = dprops->major >= 10;
+    TORCH_CHECK(is_sm100_or_newer, "only supports Blackwell (sm_100) or newer.");
 
     auto q_dtype = q.dtype();
     auto sfq_dtype = sfq.dtype();
@@ -306,8 +306,13 @@ mha_fwd(at::Tensor &q,         // batch_size x seqlen_q x num_heads x (head_size
                      per_block_mean,
                      is_bf16
                     );
-    // TODO: 132 sm count?
-    auto tile_count_semaphore = is_causal ? torch::full({1}, 132, opts.dtype(torch::kInt32)) : torch::empty({1}, opts.dtype(torch::kInt32));
+    // Initialize tile scheduler semaphore with SM count (fallback to 148 if unavailable)
+    int num_sms = 148;
+    if (dprops) {
+        int mpc = dprops->multiProcessorCount;
+        if (mpc > 0) num_sms = mpc;
+    }
+    auto tile_count_semaphore = is_causal ? torch::full({1}, num_sms, opts.dtype(torch::kInt32)) : torch::empty({1}, opts.dtype(torch::kInt32));
     params.tile_count_semaphore = tile_count_semaphore.data_ptr<int>();
 
     if (seqlen_k > 0) {
