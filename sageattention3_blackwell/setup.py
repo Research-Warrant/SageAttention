@@ -59,17 +59,13 @@ if not SKIP_CUDA_BUILD:
     _, bare_metal_version = get_cuda_bare_metal_version(CUDA_HOME)
     if bare_metal_version < Version("12.8"):
         raise RuntimeError("Sage3 is only supported on CUDA 12.8 and above")
-    cc_major, cc_minor = torch.cuda.get_device_capability()
-    if (cc_major, cc_minor) == (10, 0):  # sm_100
-        cc_flag.append("-gencode")
-        cc_flag.append("arch=compute_100a,code=sm_100a")
-    elif (cc_major, cc_minor) == (12, 0):  # sm_120
-        cc_flag.append("-gencode")
-        cc_flag.append("arch=compute_120a,code=sm_120a")
-    else:
-        raise RuntimeError("Unsupported GPU")
-    # Para Blackwell:
-    cc_flag = ["-gencode", "arch=compute_100a,code=compute_100a"]  # PTX embebido para JIT
+    # Prefer target archs from environment instead of querying a runtime device (CI may lack GPUs)
+    arch_list = os.getenv("TORCH_CUDA_ARCH_LIST", "").lower()
+    # Heuristic: decide whether to enable SM_120 features based on requested archs
+    target_has_sm120 = ("12.0" in arch_list) or ("sm_120" in arch_list) or ("120" in arch_list)
+    target_has_sm100 = ("10.0" in arch_list) or ("sm_100" in arch_list) or ("100" in arch_list)
+    # Default to sm_100 PTX if nothing specified
+    cc_flag = ["-gencode", "arch=compute_100a,code=compute_100a"]
 
     # 🧩 DEBUG: show final CUDA arch flags
     print("\n[DEBUG] NVCC architecture flags:\n  ", " ".join(cc_flag), "\n")
@@ -111,7 +107,7 @@ if not SKIP_CUDA_BUILD:
         "-DDQINRMEM",
     ]
     # Enable NVFP4 block-scaled MMA path only when targeting SM_120 (supported by ptxas)
-    if (cc_major, cc_minor) == (12, 0):
+    if target_has_sm120:
         nvcc_flags.append("-DCUTE_ARCH_MXF4NVF4_4X_UE4M3_MMA_ENABLED")
     include_dirs = [
         repo_dir / "sageattn3",
@@ -120,7 +116,7 @@ if not SKIP_CUDA_BUILD:
     ]
 
     # Only build the FP4 attention kernel for SM_120; skip on SM_100 to avoid unsupported block-scale MMA
-    if (cc_major, cc_minor) == (12, 0):
+    if target_has_sm120:
         ext_modules.append(
             CUDAExtension(
                 name="fp4attn_cuda",
