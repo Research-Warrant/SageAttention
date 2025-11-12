@@ -217,8 +217,13 @@ mha_fwd(at::Tensor &q,         // batch_size x seqlen_q x num_heads x (head_size
     ) {
 
     auto dprops = at::cuda::getCurrentDeviceProperties();
-    bool is_sm100_or_newer = dprops->major >= 10;
-    TORCH_CHECK(is_sm100_or_newer, "only supports Blackwell (sm_100) or newer.");
+    // Strict guard: this CUDA path is for SM_120 (Blackwell NVFP4 block-scaled) only.
+    bool is_sm120 = (dprops && dprops->major == 12 && dprops->minor == 0);
+    TORCH_CHECK(
+        is_sm120,
+        "SageAttention3 NVFP4 (Blackwell SM_120) kernel only supported on SM_120. "
+        "Use the Python wrapper (which falls back to torch.sdpa) or set SAGEATTN3_DISABLE_FP4=1 on SM_100 (B200)."
+    );
 
     auto q_dtype = q.dtype();
     auto sfq_dtype = sfq.dtype();
