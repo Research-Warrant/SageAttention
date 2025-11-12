@@ -119,21 +119,23 @@ if not SKIP_CUDA_BUILD:
         cutlass_dir / "tools" / "util" / "include",
     ]
 
-    ext_modules.append(
-        CUDAExtension(
-            name="fp4attn_cuda",
-            sources=["sageattn3/blackwell/api.cu"],
-            extra_compile_args={
-                "cxx": ["-O3", "-std=c++17"],
-                "nvcc": append_nvcc_threads(
-                    nvcc_flags + ["-DEXECMODE=0"] + cc_flag
-                ),
-            },
-            include_dirs=include_dirs,
-            # Without this we get and error about cuTensorMapEncodeTiled not defined
-            libraries=["cuda"]
+    # Only build the FP4 attention kernel for SM_120; skip on SM_100 to avoid unsupported block-scale MMA
+    if (cc_major, cc_minor) == (12, 0):
+        ext_modules.append(
+            CUDAExtension(
+                name="fp4attn_cuda",
+                sources=["sageattn3/blackwell/api.cu"],
+                extra_compile_args={
+                    "cxx": ["-O3", "-std=c++17"],
+                    "nvcc": append_nvcc_threads(
+                        nvcc_flags + ["-DEXECMODE=0"] + cc_flag
+                    ),
+                },
+                include_dirs=include_dirs,
+                # Without this we get and error about cuTensorMapEncodeTiled not defined
+                libraries=["cuda"]
+            )
         )
-    )
     ext_modules.append(
         CUDAExtension(
             name="fp4quant_cuda",

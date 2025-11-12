@@ -20,8 +20,14 @@ import triton.language as tl
 import torch.nn.functional as F
 from typing import Tuple
 from torch.nn.functional import scaled_dot_product_attention as sdpa
-import fp4attn_cuda
-import fp4quant_cuda
+try:
+    import fp4attn_cuda  # optional: built only for SM_120
+except Exception:
+    fp4attn_cuda = None
+try:
+    import fp4quant_cuda
+except Exception:
+    fp4quant_cuda = None
 
 
 @triton.jit
@@ -137,7 +143,7 @@ def sageattn3_blackwell(q, k, v, attn_mask = None, is_causal = False, per_block_
         cc_major, cc_minor = torch.cuda.get_device_capability(q.device)
     except Exception:
         cc_major, cc_minor = (0, 0)
-    if cc_major < 12:
+    if cc_major < 12 or fp4attn_cuda is None or fp4quant_cuda is None:
         # SM_120+ required for NVFP4 block-scaled MMA in this build
         return sdpa(q, k, v, is_causal=is_causal)
     if q.size(-1) >= 256:
