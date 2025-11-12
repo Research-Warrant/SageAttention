@@ -61,6 +61,7 @@ if not SKIP_CUDA_BUILD:
         raise RuntimeError("Sage3 is only supported on CUDA 12.8 and above")
     # Prefer target archs from environment instead of querying a runtime device (CI may lack GPUs)
     arch_list = os.getenv("TORCH_CUDA_ARCH_LIST", "").lower()
+    force_sm100 = os.getenv("SAGEATTN3_FORCE_SM100", "0") == "1"
     # Heuristic: decide whether to enable SM_120 features based on requested archs
     target_has_sm120 = ("12.0" in arch_list) or ("sm_120" in arch_list) or ("120" in arch_list)
     target_has_sm100 = ("10.0" in arch_list) or ("sm_100" in arch_list) or ("100" in arch_list)
@@ -68,7 +69,10 @@ if not SKIP_CUDA_BUILD:
     cc_flag = ["-gencode", "arch=compute_100a,code=compute_100a"]
 
     # 🧩 DEBUG: show final CUDA arch flags
-    print("\n[DEBUG] NVCC architecture flags:\n  ", " ".join(cc_flag), "\n")
+    print("\n[DEBUG] TORCH_CUDA_ARCH_LIST=", arch_list)
+    print("[DEBUG] force_sm100=", force_sm100)
+    print("[DEBUG] target_has_sm120=", target_has_sm120)
+    print("[DEBUG] NVCC architecture flags:\n  ", " ".join(cc_flag), "\n")
     
     # HACK: The compiler flag -D_GLIBCXX_USE_CXX11_ABI is set to be the same as
     # torch._C._GLIBCXX_USE_CXX11_ABI
@@ -107,7 +111,7 @@ if not SKIP_CUDA_BUILD:
         "-DDQINRMEM",
     ]
     # Enable NVFP4 block-scaled MMA path only when targeting SM_120 (supported by ptxas)
-    if target_has_sm120:
+    if target_has_sm120 and not force_sm100:
         nvcc_flags.append("-DCUTE_ARCH_MXF4NVF4_4X_UE4M3_MMA_ENABLED")
     include_dirs = [
         repo_dir / "sageattn3",
@@ -116,7 +120,7 @@ if not SKIP_CUDA_BUILD:
     ]
 
     # Only build the FP4 attention kernel for SM_120; skip on SM_100 to avoid unsupported block-scale MMA
-    if target_has_sm120:
+    if target_has_sm120 and not force_sm100:
         ext_modules.append(
             CUDAExtension(
                 name="fp4attn_cuda",
